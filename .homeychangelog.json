@@ -82,5 +82,8 @@
   },
   "1.3.5": {
     "en": "Occupancy sensors now reset to vacant when disabled, fixing stale occupied state that could block vacancy-based triggers"
+  },
+  "1.3.6": {
+    "en": "Fix double-press flow card (correct DALI event code), refresh device tiles after server reconnect, and show dimly-lit lights as at least 1% instead of 0%"
   }
 }
