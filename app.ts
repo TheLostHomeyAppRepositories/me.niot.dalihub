@@ -11,6 +11,7 @@ interface DaliDevice extends Homey.Device {
   handleButtonEvent?(eventCode: number): Promise<void>;
   updateLuxValue?(luxValue: number): Promise<void>;
   updateIlluminance?(illuminance: number): Promise<void>;
+  syncStateFromServer?(): Promise<void>;
 }
 
 class DaliHubApp extends Homey.App {
@@ -82,6 +83,9 @@ class DaliHubApp extends Homey.App {
 
         // Initialize new connection
         await this.initializeConnection(serverUrl);
+
+        // Push reloaded state to existing device tiles
+        this.syncAllDevices();
       } else {
         this.log('Server URL removed, disconnecting...');
         if (this.mqttClient) {
@@ -167,11 +171,32 @@ class DaliHubApp extends Homey.App {
     this.mqttClient.onStatus((online) => {
       this.log(`Server status changed: ${online ? 'online' : 'offline'}`);
       if (online) {
-        // Reload state when server comes back online
-        this.loadInitialState().catch((error) => {
-          this.error('Failed to reload state after server came online:', error);
-        });
+        // Reload state when server comes back online, then push it to the
+        // device tiles — MQTT only delivers deltas, so anything that changed
+        // while the server was offline must be caught up here
+        this.loadInitialState()
+          .then(() => this.syncAllDevices())
+          .catch((error) => {
+            this.error('Failed to reload state after server came online:', error);
+          });
       }
+    });
+  }
+
+  /**
+   * Push the freshly loaded state to every device's capabilities.
+   * Without this, a reload only updates the app's cache and the tiles
+   * keep showing values from before the disconnect.
+   */
+  private syncAllDevices(): void {
+    const drivers = this.homey.drivers.getDrivers();
+    Object.values(drivers).forEach((driver) => {
+      const devices = driver.getDevices() as DaliDevice[];
+      devices.forEach((device) => {
+        device.syncStateFromServer?.().catch((err: Error) => {
+          this.error(`Failed to sync ${device.getName()}:`, err);
+        });
+      });
     });
   }
 

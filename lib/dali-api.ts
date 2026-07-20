@@ -33,6 +33,20 @@ export function percentToArc(percent: number): number {
   return Math.round(arc);
 }
 
+/**
+ * DALI Arc 값을 Homey dim 값(0-1)으로 변환
+ *
+ * 켜져 있는 한(arc 1 이상) 최소 0.01(1%)을 보장한다.
+ * 로그 커브상 arc 1~84는 1% 미만이라 그대로 넣으면 Homey UI에
+ * 0%(꺼진 것처럼)로 표시되기 때문.
+ * @param arc - DALI arc 값 (0-254)
+ * @returns Homey dim 값 (0-1)
+ */
+export function arcToDim(arc: number): number {
+  if (arc <= 0) return 0;
+  return Math.max(0.01, arcToPercent(arc) / 100);
+}
+
 export interface DaliGear {
   busId: number;
   address: number;

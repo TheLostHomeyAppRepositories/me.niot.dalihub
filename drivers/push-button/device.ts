@@ -35,7 +35,8 @@ class PushButtonDevice extends Homey.Device {
       case 2:
         await this.shortPressFlow.trigger(this, {}, {}).catch(this.error);
         break;
-      case 3:
+      // IEC 62386-301 Table 2: double press = 5 (3 is reserved)
+      case 5:
         await this.doublePressFlow.trigger(this, {}, {}).catch(this.error);
         break;
       case 9:

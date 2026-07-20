@@ -1,6 +1,6 @@
 import Homey from 'homey';
 import {
-  DaliGroup, DaliState, DaliApiClient, arcToPercent, percentToArc,
+  DaliGroup, DaliState, DaliApiClient, arcToPercent, percentToArc, arcToDim,
 } from '../../lib/dali-api';
 
 interface LightGroupDriver extends Homey.Driver {
@@ -42,7 +42,7 @@ class LightGroupDevice extends Homey.Device {
       if (group) {
         const isOn = group.level > 0;
         const percent = arcToPercent(group.level);
-        const dimValue = percent / 100;
+        const dimValue = arcToDim(group.level);
 
         await this.setCapabilityValue('onoff', isOn).catch(this.error);
         await this.setCapabilityValue('dim', dimValue).catch(this.error);
@@ -125,8 +125,7 @@ class LightGroupDevice extends Homey.Device {
     await client.setGroupLevel(this.busId, this.groupId, level, fadeTime);
 
     // Update dim and onoff to reflect the change
-    const percent = arcToPercent(level);
-    const dimValue = percent / 100;
+    const dimValue = arcToDim(level);
 
     if (level > 0) {
       await this.setCapabilityValue('onoff', true).catch(this.error);
@@ -202,7 +201,7 @@ class LightGroupDevice extends Homey.Device {
   async updateLevelFromEvent(level: number, source?: string, command?: string) {
     const isOn = level > 0;
     const percent = arcToPercent(level);
-    const dimValue = percent / 100;
+    const dimValue = arcToDim(level);
 
     await this.setCapabilityValue('onoff', isOn).catch(this.error);
     await this.setCapabilityValue('dim', dimValue).catch(this.error);

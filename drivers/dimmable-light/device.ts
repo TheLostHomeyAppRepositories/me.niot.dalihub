@@ -1,6 +1,6 @@
 import Homey from 'homey';
 import {
-  DaliGear, DaliState, DaliApiClient, arcToPercent, percentToArc,
+  DaliGear, DaliState, DaliApiClient, arcToPercent, percentToArc, arcToDim,
 } from '../../lib/dali-api';
 
 interface DimmableLightDriver extends Homey.Driver {
@@ -42,7 +42,7 @@ class DimmableLightDevice extends Homey.Device {
       if (gear) {
         const isOn = gear.level > 0;
         const percent = arcToPercent(gear.level);
-        const dimValue = percent / 100;
+        const dimValue = arcToDim(gear.level);
 
         await this.setCapabilityValue('onoff', isOn).catch(this.error);
         await this.setCapabilityValue('dim', dimValue).catch(this.error);
@@ -125,8 +125,7 @@ class DimmableLightDevice extends Homey.Device {
     await client.setLightLevel(this.busId, this.address, level, fadeTime);
 
     // Update dim and onoff to reflect the change
-    const percent = arcToPercent(level);
-    const dimValue = percent / 100;
+    const dimValue = arcToDim(level);
 
     if (level > 0) {
       await this.setCapabilityValue('onoff', true).catch(this.error);
@@ -202,7 +201,7 @@ class DimmableLightDevice extends Homey.Device {
   async updateLevelFromEvent(level: number, source?: string, command?: string) {
     const isOn = level > 0;
     const percent = arcToPercent(level);
-    const dimValue = percent / 100;
+    const dimValue = arcToDim(level);
 
     await this.setCapabilityValue('onoff', isOn).catch(this.error);
     await this.setCapabilityValue('dim', dimValue).catch(this.error);
